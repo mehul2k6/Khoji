@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engineering Attendance Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .table-container::-webkit-scrollbar { height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .btn-selected-attended { background-color: #22c55e !important; color: white !important; }
+        .btn-selected-missed { background-color: #ef4444 !important; color: white !important; }
+        .btn-selected-cancelled { background-color: #6b7280 !important; color: white !important; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans h-screen flex flex-col">
+
+    <!-- ================= LOGIN SCREEN ================= -->
+    <div id="login-screen" class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md border-t-4 border-blue-600">
+            <h1 class="text-2xl font-bold text-center text-gray-900 mb-2">Attendance Portal</h1>
+            <p class="text-sm text-center text-gray-500 mb-6">Enter your unique ID and password to access your data.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username (ID)</label>
+                    <input type="text" id="login-username" class="w-full border-gray-300 rounded p-2 border focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. student1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="login-password" class="w-full border-gray-300 rounded p-2 border focus:ring-blue-500 focus:border-blue-500" placeholder="••••••••">
+                </div>
+                
+                <p id="login-error" class="text-red-600 text-sm font-semibold hidden text-center"></p>
+
+                <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition mt-2">
+                    Login / Create Account
+                </button>
+                <p class="text-xs text-gray-400 text-center mt-2">If the ID doesn't exist, a new account will be created automatically.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MAIN APPLICATION ================= -->
+    <div id="main-app" class="hidden w-full max-w-7xl mx-auto space-y-6 p-4 md:p-6 overflow-y-auto h-full">
+        
+        <!-- Header / Overall Stats -->
+        <header class="bg-white p-6 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4 border-t-4 border-blue-600">
+            <div>
+                <div class="flex items-center gap-3 justify-center md:justify-start">
+                    <h1 class="text-3xl font-bold text-gray-900">Attendance Tracker</h1>
+                    <button onclick="handleLogout()" class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded text-xs font-bold transition">Logout</button>
+                </div>
+                <p class="text-sm text-gray-500 font-medium mt-1">Logged in as: <span id="display-username" class="text-blue-600 font-bold"></span> | Mech - Section 1 (M1B2)</p>
+            </div>
+            
+            <div class="flex items-center gap-6 bg-gray-50 p-4 rounded-lg border">
+                <div class="text-center border-r pr-6 border-gray-300">
+                    <p class="text-xs text-gray-500 font-semibold uppercase">Total Held</p>
+                    <p id="total-held" class="text-xl font-bold text-gray-800">0</p>
+                </div>
+                <div class="text-center border-r pr-6 border-gray-300">
+                    <p class="text-xs text-gray-500 font-semibold uppercase">Attended</p>
+                    <p id="total-attended" class="text-xl font-bold text-gray-800">0</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-500 font-semibold uppercase">Percentage</p>
+                    <p id="overall-percentage" class="text-2xl font-bold text-blue-600">0%</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="flex space-x-2 border-b border-gray-300 pb-2">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-t-lg transition">Daily Log</button>
+            <button onclick="switchTab('timetable')" id="tab-timetable" class="px-6 py-2 bg-gray-200 text-gray-600 hover:bg-gray-300 font-semibold rounded-t-lg transition">Manage Timetable</button>
+        </div>
+
+        <!-- DASHBOARD TAB -->
+        <div id="section-dashboard" class="grid grid-cols-1 lg:grid-cols-3 gap-6 block">
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <!-- Date Navigator -->
+                    <div class="flex items-center justify-between bg-gray-100 p-2 rounded-lg mb-4 border">
+                        <button id="btn-prev-date" onclick="changeDate(-1)" class="px-3 py-1.5 bg-white text-gray-600 rounded shadow hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="text-center">
+                            <span id="display-date" class="font-bold text-gray-800 block text-sm"></span>
+                            <span id="display-day" class="text-xs text-gray-500 font-semibold"></span>
+                        </div>
+                        <button id="btn-next-date" onclick="changeDate(1)" class="px-3 py-1.5 bg-white text-gray-600 rounded shadow hover:bg-gray-50 transition">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-lg font-bold">Scheduled Classes</h2>
+                            <span id="holiday-badge" class="hidden bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">DAY OFF</span>
+                        </div>
+                        <button id="btn-toggle-holiday" onclick="toggleDateHoliday()" class="text-xs font-semibold py-1 px-3 rounded-full border transition hidden"></button>
+                    </div>
+                    
+                    <div id="daily-classes-list" class="space-y-3"></div>
+                    <p id="no-classes-msg" class="hidden text-gray-500 text-center py-4 text-sm"></p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md h-fit">
+                <h2 class="text-xl font-bold mb-4 border-b pb-2">Subject Wise Attendance</h2>
+                <div id="subject-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+        </div>
+
+        <!-- TIMETABLE TAB -->
+        <div id="section-timetable" class="bg-white p-6 rounded-lg shadow-md hidden">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <div>
+                    <h2 class="text-xl font-bold">Weekly Timetable Editor</h2>
+                    <p class="text-sm text-gray-500">Changes made here only affect your account.</p>
+                </div>
+                <button onclick="saveTimetable()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition">
+                    <i class="fas fa-save mr-2"></i>Save Schedule
+                </button>
+            </div>
+
+            <div class="table-container overflow-x-auto pb-4">
+                <table class="w-full text-left border-collapse min-w-[1200px]">
+                    <thead>
+                        <tr id="timetable-headers" class="bg-gray-100 border-b-2 border-gray-300"></tr>
+                    </thead>
+                    <tbody id="timetable-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const ORDERED_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        const SLOTS = 7;
+        
+        // Start date logic
+        const START_DATE = new Date("2026-07-13T00:00:00");
+        let currentDate = new Date();
+        if(currentDate < START_DATE) currentDate = new Date(START_DATE);
+
+        // Define a fresh template for new accounts
+        function getNewUserTemplate() {
+            return {
+                slotTimings: [
+                    "9:00 - 10:00 AM", "10:00 - 11:00 AM", "11:00 - 12:00 PM", "12:00 - 1:00 PM", 
+                    "2:30 - 3:30 PM", "3:30 - 4:30 PM", "4:30 - 5:30 PM"
+                ],
+                schedule: {
+                    "Monday": { holiday: false, slots: ["Mechanism of Machines", "Applied Numerical Methods", "Engineering Thermodynamics", "Mechanics of Materials", "", "", ""] },
+                    "Tuesday": { holiday: false, slots: ["Applied Numerical Methods", "Material Science and Engineering", "Mechanics of Materials", "Engineering Thermodynamics", "Material Characterization Lab", "Material Characterization Lab", ""] },
+                    "Wednesday": { holiday: false, slots: ["Mechanism of Machines", "Material Science and Engineering", "Entrepreneurship and ERP", "Engineering Thermodynamics", "", "", ""] },
+                    "Thursday": { holiday: false, slots: ["Entrepreneurship and ERP", "Mechanics of Materials", "Mechanics of Materials Lab", "Mechanics of Materials Lab", "Applied Numerical Methods", "", ""] },
+                    "Friday": { holiday: false, slots: ["Mechanism of Machines", "Applied Numerical Methods", "Material Science and Engineering", "Entrepreneurship and ERP", "Mechanism of Machines Lab", "Mechanism of Machines Lab", ""] },
+                    "Saturday": { holiday: true, slots: Array(7).fill("") },
+                    "Sunday": { holiday: true, slots: Array(7).fill("") }
+                },
+                records: {}
+            };
+        }
+
+        // Entire database stored under one key, separated by users
+        let database = JSON.parse(localStorage.getItem('attendanceDB_Users')) || { users: {} };
+        let currentUser = null; // Stores the currently logged in username
+        let appData = null; // Stores the active user's specific data
+
+        // --- AUTHENTICATION LOGIC ---
+        function handleLogin() {
+            const usernameInput = document.getElementById('login-username').value.trim().toLowerCase();
+            const passwordInput = document.getElementById('login-password').value;
+            const errorMsg = document.getElementById('login-error');
+
+            if (usernameInput === "" || passwordInput === "") {
+                errorMsg.innerText = "Please enter both ID and Password.";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            // Check if user exists
+            if (database.users[usernameInput]) {
+                // Validate password
+                if (database.users[usernameInput].password === passwordInput) {
+                    // Success
+                    startApp(usernameInput);
+                } else {
+                    errorMsg.innerText = "Incorrect Password.";
+                    errorMsg.classList.remove('hidden');
+                }
+            } else {
+                // Enforce limit of 5 users (optional check)
+                if (Object.keys(database.users).length >= 5) {
+                    errorMsg.innerText = "Maximum of 5 user accounts reached.";
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+
+                // Create new user
+                database.users[usernameInput] = {
+                    password: passwordInput,
+                    data: getNewUserTemplate()
+                };
+                saveDatabase();
+                startApp(usernameInput);
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            appData = null;
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            
+            // Clear inputs
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-error').classList.add('hidden');
+        }
+
+        function startApp(username) {
+            currentUser = username;
+            appData = database.users[currentUser].data;
+            
+            document.getElementById('display-username').innerText = currentUser;
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            // Revert to dashboard tab and render
+            switchTab('dashboard');
+            renderAll();
+        }
+
+        function saveDatabase() {
+            if (currentUser && appData) {
+                database.users[currentUser].data = appData;
+            }
+            localStorage.setItem('attendanceDB_Users', JSON.stringify(database));
+        }
+
+        // --- UTILITIES ---
+        function formatDate(dateObj) {
+            return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+        }
+
+        function calcPercent(attended, held) {
+            return held === 0 ? 0 : ((attended / held) * 100);
+        }
+
+        function getColorClass(percentage) {
+            if (percentage >= 85) return 'text-green-600';
+            if (percentage >= 75) return 'text-yellow-600';
+            return 'text-red-600';
+        }
+
+        // --- DATE NAVIGATION ---
+        function changeDate(days) {
+            let newDate = new Date(currentDate);
+            newDate.setDate(newDate.getDate() + days);
+            if (newDate >= START_DATE) {
+                currentDate = newDate;
+                renderAll();
+            }
+        }
+
+        // --- CORE LOGIC ---
+        function calculateStats() {
+            let stats = {};
+            Object.values(appData.schedule).forEach(day => {
+                day.slots.forEach(subject => {
+                    if(subject.trim() !== "") {
+                        stats[subject.trim()] = { attended: 0, missed: 0, held: 0 };
+                    }
+                });
+            });
+
+            for (const [dateStr, dayRecord] of Object.entries(appData.records)) {
+                if (dayRecord.isHoliday) continue;
+                const recordDate = new Date(dateStr);
+                const dayName = DAYS[recordDate.getDay()];
+                const dailyTemplate = appData.schedule[dayName].slots;
+
+                for (const [slotIndexStr, status] of Object.entries(dayRecord.slots)) {
+                    const slotIndex = parseInt(slotIndexStr);
+                    const subject = dailyTemplate[slotIndex];
+
+                    if (subject && subject.trim() !== "") {
+                        if (!stats[subject]) stats[subject] = { attended: 0, missed: 0, held: 0 };
+                        if (status === 'attended') {
+                            stats[subject].attended++;
+                            stats[subject].held++;
+                        } else if (status === 'missed') {
+                            stats[subject].missed++;
+                            stats[subject].held++;
+                        }
+                    }
+                }
+            }
+            return stats;
+        }
+
+        function switchTab(tabName) {
+            document.getElementById('section-dashboard').classList.toggle('hidden', tabName !== 'dashboard');
+            document.getElementById('section-dashboard').classList.toggle('grid', tabName === 'dashboard');
+            document.getElementById('section-timetable').classList.toggle('hidden', tabName !== 'timetable');
+            document.getElementById('section-timetable').classList.toggle('block', tabName === 'timetable');
+
+            if(tabName === 'dashboard') {
+                document.getElementById('tab-dashboard').className = "px-6 py-2 bg-blue-600 text-white font-semibold rounded-t-lg transition";
+                document.getElementById('tab-timetable').className = "px-6 py-2 bg-gray-200 text-gray-600 hover:bg-gray-300 font-semibold rounded-t-lg transition";
+            } else {
+                document.getElementById('tab-dashboard').className = "px-6 py-2 bg-gray-200 text-gray-600 hover:bg-gray-300 font-semibold rounded-t-lg transition";
+                document.getElementById('tab-timetable').className = "px-6 py-2 bg-blue-600 text-white font-semibold rounded-t-lg transition";
+            }
+        }
+
+        // --- RENDERING ---
+        function renderAll() {
+            const stats = calculateStats();
+            renderHeader(stats);
+            renderDateUI();
+            renderDailyClasses();
+            renderSubjectStats(stats);
+            renderTimetableGrid();
+        }
+
+        function renderHeader(stats) {
+            let totalHeld = 0;
+            let totalAtt = 0;
+            for (const data of Object.values(stats)) {
+                totalHeld += data.held;
+                totalAtt += data.attended;
+            }
+            const overallPct = calcPercent(totalAtt, totalHeld);
+            document.getElementById('total-held').innerText = totalHeld;
+            document.getElementById('total-attended').innerText = totalAtt;
+            const pctElement = document.getElementById('overall-percentage');
+            pctElement.innerText = `${overallPct.toFixed(1)}%`;
+            pctElement.className = `text-2xl font-bold ${getColorClass(overallPct)}`;
+        }
+
+        function renderDateUI() {
+            document.getElementById('display-date').innerText = currentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('display-day').innerText = DAYS[currentDate.getDay()];
+            const isAtStart = formatDate(currentDate) === formatDate(START_DATE);
+            document.getElementById('btn-prev-date').disabled = isAtStart;
+        }
+
+        function renderDailyClasses() {
+            const dateStr = formatDate(currentDate);
+            const dayName = DAYS[currentDate.getDay()];
+            const template = appData.schedule[dayName];
+            
+            const listDiv = document.getElementById('daily-classes-list');
+            const noMsg = document.getElementById('no-classes-msg');
+            const holidayBadge = document.getElementById('holiday-badge');
+            const toggleBtn = document.getElementById('btn-toggle-holiday');
+
+            listDiv.innerHTML = '';
+            
+            let dateRecord = appData.records[dateStr];
+            let isSpecialHoliday = dateRecord ? dateRecord.isHoliday : false;
+            let isWeeklyHoliday = template.holiday;
+
+            if (isWeeklyHoliday) {
+                toggleBtn.classList.add('hidden');
+            } else {
+                toggleBtn.classList.remove('hidden');
+                if (isSpecialHoliday) {
+                    toggleBtn.innerHTML = '<i class="fas fa-undo mr-1"></i> Undo Holiday';
+                    toggleBtn.className = "text-xs font-semibold py-1.5 px-3 rounded-full border bg-gray-100 text-gray-700 hover:bg-gray-200 transition";
+                } else {
+                    toggleBtn.innerHTML = '<i class="fas fa-umbrella-beach mr-1"></i> Cancel Day (Holiday)';
+                    toggleBtn.className = "text-xs font-semibold py-1.5 px-3 rounded-full border bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100 transition";
+                }
+            }
+
+            if (isWeeklyHoliday || isSpecialHoliday) {
+                holidayBadge.classList.remove('hidden');
+                noMsg.classList.remove('hidden');
+                noMsg.innerText = isSpecialHoliday ? "You cancelled classes for this date." : "Weekly Day Off.";
+                return;
+            } else {
+                holidayBadge.classList.add('hidden');
+            }
+
+            let hasClasses = false;
+            for (let i = 0; i < SLOTS; i++) {
+                const subjectName = template.slots[i];
+                if (subjectName.trim() !== "") {
+                    hasClasses = true;
+                    const timeSlot = appData.slotTimings[i];
+                    
+                    let selectedStatus = null;
+                    if (dateRecord && dateRecord.slots[i]) selectedStatus = dateRecord.slots[i];
+
+                    const btnAtt = selectedStatus === 'attended' ? 'btn-selected-attended' : 'bg-green-50 text-green-700 hover:bg-green-100';
+                    const btnMis = selectedStatus === 'missed' ? 'btn-selected-missed' : 'bg-red-50 text-red-700 hover:bg-red-100';
+                    const btnCan = selectedStatus === 'cancelled' ? 'btn-selected-cancelled' : 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+
+                    listDiv.innerHTML += `
+                        <div class="flex flex-col bg-gray-50 p-3 rounded-lg border gap-2">
+                            <div class="flex items-center">
+                                <span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded mr-2 w-max">${timeSlot}</span>
+                                <span class="font-semibold text-gray-800 text-sm">${subjectName}</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 w-full mt-2">
+                                <button onclick="markClass(${i}, 'attended')" class="${btnAtt} py-1.5 rounded text-sm font-semibold transition border border-green-200"><i class="fas fa-check mr-1"></i> Attended</button>
+                                <button onclick="markClass(${i}, 'missed')" class="${btnMis} py-1.5 rounded text-sm font-semibold transition border border-red-200"><i class="fas fa-times mr-1"></i> Missed</button>
+                                <button onclick="markClass(${i}, 'cancelled')" class="${btnCan} py-1.5 rounded text-sm font-semibold transition border border-gray-300" title="Class Cancelled"><i class="fas fa-minus mr-1"></i> Cancelled</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            if (!hasClasses) {
+                noMsg.classList.remove('hidden');
+                noMsg.innerText = "No classes scheduled in your timetable for this date.";
+            } else {
+                noMsg.classList.add('hidden');
+            }
+        }
+
+        function renderSubjectStats(stats) {
+            const listDiv = document.getElementById('subject-list');
+            listDiv.innerHTML = '';
+            const subjects = Object.entries(stats).sort((a, b) => a[0].localeCompare(b[0]));
+
+            if (subjects.length === 0) {
+                listDiv.innerHTML = '<p class="text-sm text-gray-500 col-span-2">No subjects found in timetable.</p>';
+                return;
+            }
+
+            subjects.forEach(([name, data]) => {
+                const pct = calcPercent(data.attended, data.held);
+                listDiv.innerHTML += `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border">
+                        <div class="overflow-hidden pr-2">
+                            <p class="font-semibold text-sm truncate" title="${name}">${name}</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Held: ${data.held} &nbsp;|&nbsp; Attended: ${data.attended}</p>
+                        </div>
+                        <div class="text-right pl-2 border-l">
+                            <p class="text-xl font-bold ${getColorClass(pct)}">${pct.toFixed(1)}%</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderTimetableGrid() {
+            const thead = document.getElementById('timetable-headers');
+            const tbody = document.getElementById('timetable-body');
+            
+            let headerHTML = `<th class="p-3 font-semibold text-gray-700 w-32 border-r bg-gray-100 sticky left-0 z-10">Day</th>`;
+            for (let i = 0; i < SLOTS; i++) {
+                headerHTML += `
+                    <th class="p-3 font-semibold text-center border-r min-w-[150px]">
+                        <div class="text-xs text-gray-500 mb-1">Period ${i+1}</div>
+                        <input type="text" id="time-slot-${i}" value="${appData.slotTimings[i]}" class="w-full text-center text-xs border-gray-300 rounded p-1 border focus:ring-blue-500 focus:border-blue-500">
+                    </th>
+                `;
+            }
+            thead.innerHTML = headerHTML;
+
+            tbody.innerHTML = '';
+            ORDERED_DAYS.forEach(day => {
+                const dayData = appData.schedule[day];
+                let rowHTML = `
+                    <tr class="border-b border-gray-200 bg-white hover:bg-gray-50">
+                        <td class="p-3 border-r bg-gray-50 sticky left-0 z-10">
+                            <div class="font-bold text-gray-800 text-sm">${day}</div>
+                            <label class="flex items-center space-x-1 mt-1 cursor-pointer">
+                                <input type="checkbox" id="holiday-${day}" class="w-3 h-3 text-blue-600 rounded" ${dayData.holiday ? 'checked' : ''} onchange="toggleRowDisabled('${day}')">
+                                <span class="text-xs text-gray-600">Day Off</span>
+                            </label>
+                        </td>
+                `;
+
+                for (let i = 0; i < SLOTS; i++) {
+                    const subj = dayData.slots[i];
+                    const isDisabled = dayData.holiday ? 'disabled' : '';
+                    const opacityClass = dayData.holiday ? 'opacity-50' : '';
+                    rowHTML += `
+                        <td class="p-2 border-r align-top ${opacityClass}" id="td-${day}-${i}">
+                            <textarea id="name-${day}-${i}" placeholder="Subject" class="w-full h-12 resize-none text-xs border-gray-300 rounded p-1 border focus:ring-blue-500 focus:border-blue-500" ${isDisabled}>${subj}</textarea>
+                        </td>
+                    `;
+                }
+                rowHTML += `</tr>`;
+                tbody.innerHTML += rowHTML;
+            });
+        }
+
+        // --- ACTIONS ---
+        function toggleDateHoliday() {
+            const dateStr = formatDate(currentDate);
+            if (!appData.records[dateStr]) {
+                appData.records[dateStr] = { isHoliday: true, slots: {} };
+            } else {
+                appData.records[dateStr].isHoliday = !appData.records[dateStr].isHoliday;
+            }
+            saveDatabase();
+            renderAll();
+        }
+
+        function markClass(slotIndex, status) {
+            const dateStr = formatDate(currentDate);
+            if (!appData.records[dateStr]) appData.records[dateStr] = { isHoliday: false, slots: {} };
+            appData.records[dateStr].slots[slotIndex] = status;
+            saveDatabase();
+            renderAll(); 
+        }
+
+        function toggleRowDisabled(day) {
+            const isHoliday = document.getElementById(`holiday-${day}`).checked;
+            for (let i = 0; i < SLOTS; i++) {
+                document.getElementById(`name-${day}-${i}`).disabled = isHoliday;
+                const td = document.getElementById(`td-${day}-${i}`);
+                if(isHoliday) td.classList.add('opacity-50');
+                else td.classList.remove('opacity-50');
+            }
+        }
+
+        function saveTimetable() {
+            for (let i = 0; i < SLOTS; i++) {
+                appData.slotTimings[i] = document.getElementById(`time-slot-${i}`).value;
+            }
+            ORDERED_DAYS.forEach(day => {
+                const isHoliday = document.getElementById(`holiday-${day}`).checked;
+                appData.schedule[day].holiday = isHoliday;
+                for (let i = 0; i < SLOTS; i++) {
+                    appData.schedule[day].slots[i] = document.getElementById(`name-${day}-${i}`).value.trim();
+                }
+            });
+            saveDatabase();
+            renderAll();
+            switchTab('dashboard');
+        }
+    </script>
+</body>
+</html>
