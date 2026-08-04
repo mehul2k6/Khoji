@@ -142,13 +142,17 @@
 
         <!-- Navigation Tabs -->
         <div class="flex justify-center md:justify-start">
-            <div class="bg-slate-200/70 p-1.5 rounded-xl inline-flex shadow-inner">
+            <div class="bg-slate-200/70 p-1.5 rounded-xl inline-flex shadow-inner flex-wrap justify-center gap-1">
                 <button onclick="switchTab('dashboard')" id="tab-dashboard"
-                    class="px-8 py-2.5 bg-white text-blue-700 font-bold rounded-lg shadow-sm transition-all duration-300">
+                    class="px-6 md:px-8 py-2.5 bg-white text-blue-700 font-bold rounded-lg shadow-sm transition-all duration-300">
                     <i class="fas fa-calendar-day mr-2"></i>Daily Log
                 </button>
+                <button onclick="switchTab('missed')" id="tab-missed"
+                    class="px-6 md:px-8 py-2.5 text-slate-500 font-medium hover:text-slate-700 rounded-lg transition-all duration-300">
+                    <i class="fas fa-history mr-2"></i>Missed Classes
+                </button>
                 <button onclick="switchTab('timetable')" id="tab-timetable"
-                    class="px-8 py-2.5 text-slate-500 font-medium hover:text-slate-700 rounded-lg transition-all duration-300">
+                    class="px-6 md:px-8 py-2.5 text-slate-500 font-medium hover:text-slate-700 rounded-lg transition-all duration-300">
                     <i class="fas fa-table mr-2"></i>Timetable
                 </button>
             </div>
@@ -236,6 +240,25 @@
                 <div id="subject-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Subjects injected via JS -->
                 </div>
+            </div>
+        </div>
+
+        <!-- ================= MISSED CLASSES TAB ================= -->
+        <div id="section-missed" class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 hidden fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-800">Missed Classes History</h2>
+                        <p class="text-sm text-slate-500 font-medium">A timeline of classes you have missed.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="missed-classes-list" class="w-full">
+                <!-- Missed classes injected via JS -->
             </div>
         </div>
 
@@ -486,17 +509,14 @@
                 return;
             }
 
-            // CRITICAL FIX: Fetch the active session on initial load so user stays logged in
             const { data: { session } } = await supabaseClient.auth.getSession();
             currentUser = session ? session.user : null;
             updateHeaderAuthUI();
 
-            // Only load data AFTER we know if a user is logged in
             loadDataFromCloud();
 
-            // Listen for future login/logout events
             supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (event === 'INITIAL_SESSION') return; // Handled above
+                if (event === 'INITIAL_SESSION') return;
                 currentUser = session ? session.user : null;
                 updateHeaderAuthUI();
                 loadDataFromCloud();
@@ -618,10 +638,7 @@
 
         // --- DATA PERSISTENCE & SUPABASE DATA STORAGE ---
         async function saveData() {
-            // Backup to LocalStorage
             localStorage.setItem('attendanceTrackerBackup', JSON.stringify(appData));
-
-            // Save to Supabase Cloud PostgreSQL DB if user is logged in
             if (supabaseClient && currentUser) {
                 try {
                     const { error } = await supabaseClient
@@ -640,7 +657,6 @@
 
         async function loadDataFromCloud() {
             document.getElementById('overall-percentage').innerText = "...";
-
             if (supabaseClient && currentUser) {
                 try {
                     const { data, error } = await supabaseClient
@@ -660,7 +676,6 @@
                 if (localBackup) appData = localBackup;
             }
 
-            // Backward compatibility checks
             if (!appData.batchName) appData.batchName = "Enter Batch Name";
             if (!appData.targetCriteria) appData.targetCriteria = 75;
 
@@ -731,10 +746,9 @@
             }
         }
 
-        // --- STATS CALCULATION ---
+        // --- STATS & HISTORY CALCULATION ---
         function calculateStats() {
             let stats = {};
-
             Object.values(appData.schedule).forEach(day => {
                 day.slots.forEach(subject => {
                     if (subject.trim() !== "") stats[subject.trim()] = { attended: 0, missed: 0, held: 0 };
@@ -743,8 +757,7 @@
 
             for (const [dateStr, dayRecord] of Object.entries(appData.records)) {
                 if (dayRecord.isHoliday) continue;
-
-                const recordDate = new Date(dateStr);
+                const recordDate = new Date(dateStr + "T00:00:00");
                 const dayName = DAYS[recordDate.getDay()];
                 const dailyTemplate = appData.schedule[dayName] ? appData.schedule[dayName].slots : Array(7).fill("");
 
@@ -797,23 +810,81 @@
             return stats;
         }
 
+        function getMissedClasses() {
+            let missedList = [];
+            for (const [dateStr, dayRecord] of Object.entries(appData.records)) {
+                if (dayRecord.isHoliday) continue;
+
+                const recordDate = new Date(dateStr + "T00:00:00");
+                const dayName = DAYS[recordDate.getDay()];
+                const dailyTemplate = appData.schedule[dayName] ? appData.schedule[dayName].slots : Array(7).fill("");
+
+                let replacedSlots = new Set();
+                if (dayRecord.extra) {
+                    dayRecord.extra.forEach(ext => {
+                        if (ext.replacedSlot !== null && ext.replacedSlot !== undefined) {
+                            replacedSlots.add(ext.replacedSlot);
+                        }
+                    });
+                }
+
+                let i = 0;
+                while (i < SLOTS) {
+                    const subject = dailyTemplate[i].trim();
+                    if (subject !== "") {
+                        let span = 1;
+                        while (i + span < SLOTS && dailyTemplate[i + span].trim() === subject) span++;
+
+                        if (!replacedSlots.has(i)) {
+                            if (dayRecord.slots[i] === 'missed') {
+                                missedList.push({
+                                    dateObj: recordDate,
+                                    subject: subject,
+                                    time: getMergedTime(i, i + span - 1),
+                                    type: 'regular'
+                                });
+                            }
+                        }
+                        i += span;
+                    } else {
+                        i++;
+                    }
+                }
+
+                if (dayRecord.extra) {
+                    dayRecord.extra.forEach(ext => {
+                        if (ext.status === 'missed') {
+                            missedList.push({
+                                dateObj: recordDate,
+                                subject: ext.subject,
+                                time: ext.time,
+                                type: 'extra'
+                            });
+                        }
+                    });
+                }
+            }
+            missedList.sort((a, b) => b.dateObj - a.dateObj);
+            return missedList;
+        }
+
         // --- TAB SWITCHING ---
         function switchTab(tabName) {
             document.getElementById('section-dashboard').classList.toggle('hidden', tabName !== 'dashboard');
             document.getElementById('section-dashboard').classList.toggle('grid', tabName === 'dashboard');
+            
+            document.getElementById('section-missed').classList.toggle('hidden', tabName !== 'missed');
+            document.getElementById('section-missed').classList.toggle('block', tabName === 'missed');
+            
             document.getElementById('section-timetable').classList.toggle('hidden', tabName !== 'timetable');
             document.getElementById('section-timetable').classList.toggle('block', tabName === 'timetable');
 
-            const activeClass = "px-8 py-2.5 bg-white text-blue-700 font-bold rounded-lg shadow-sm transition-all duration-300";
-            const inactiveClass = "px-8 py-2.5 text-slate-500 font-medium hover:text-slate-700 rounded-lg transition-all duration-300";
+            const activeClass = "px-6 md:px-8 py-2.5 bg-white text-blue-700 font-bold rounded-lg shadow-sm transition-all duration-300";
+            const inactiveClass = "px-6 md:px-8 py-2.5 text-slate-500 font-medium hover:text-slate-700 rounded-lg transition-all duration-300";
 
-            if (tabName === 'dashboard') {
-                document.getElementById('tab-dashboard').className = activeClass;
-                document.getElementById('tab-timetable').className = inactiveClass;
-            } else {
-                document.getElementById('tab-dashboard').className = inactiveClass;
-                document.getElementById('tab-timetable').className = activeClass;
-            }
+            document.getElementById('tab-dashboard').className = tabName === 'dashboard' ? activeClass : inactiveClass;
+            document.getElementById('tab-missed').className = tabName === 'missed' ? activeClass : inactiveClass;
+            document.getElementById('tab-timetable').className = tabName === 'timetable' ? activeClass : inactiveClass;
         }
 
         // --- RENDERING FUNCTIONS ---
@@ -825,6 +896,7 @@
             renderDailyClasses();
             renderSubjectStats(stats);
             renderTimetableGrid();
+            renderMissedClasses();
         }
 
         function renderHeader(stats) {
@@ -1158,6 +1230,51 @@
             });
         }
 
+        function renderMissedClasses() {
+            const missedList = getMissedClasses();
+            const container = document.getElementById('missed-classes-list');
+            if (!container) return; 
+
+            if (missedList.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col justify-center items-center py-12 text-slate-400">
+                        <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-3">
+                            <i class="fas fa-check-circle text-2xl text-emerald-500"></i>
+                        </div>
+                        <h3 class="text-slate-700 font-bold">No missed classes!</h3>
+                        <p class="text-sm mt-1">You have a perfect attendance record.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">';
+            missedList.forEach(item => {
+                const dateFormatted = item.dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                const badge = item.type === 'extra' ? '<span class="text-[10px] ml-2 font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full border border-indigo-200 inline-block align-middle">Extra Class</span>' : '';
+                
+                html += `
+                    <div class="bg-white p-4 rounded-xl border border-rose-200 border-l-4 border-l-rose-500 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-2.5">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold text-slate-800 text-sm leading-tight">${item.subject} ${badge}</span>
+                        </div>
+                        <div class="flex flex-col gap-1 mt-auto">
+                            <div class="flex items-center gap-2 text-xs text-slate-500 font-medium bg-slate-50 p-1.5 rounded-md border border-slate-100">
+                                <i class="far fa-calendar-alt w-3.5 text-center text-rose-400"></i> 
+                                <span>${dateFormatted}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-slate-500 font-medium bg-slate-50 p-1.5 rounded-md border border-slate-100">
+                                <i class="far fa-clock w-3.5 text-center text-rose-400"></i> 
+                                <span>${item.time}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
         // --- ACTIONS ---
         function markWorkingDay() {
             const dateStr = formatDate(currentDate);
@@ -1334,7 +1451,6 @@
             }
         }
 
-        // CRITICAL FIX: Only call initAuthListener, let it handle the data loading.
         window.onload = function () {
             initAuthListener();
         };
