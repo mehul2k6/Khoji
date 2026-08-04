@@ -837,15 +837,12 @@
 
                         if (!replacedSlots.has(i)) {
                             if (dayRecord.slots[i] === 'missed') {
-                                const reason = (dayRecord.reasons && dayRecord.reasons[i]) ? dayRecord.reasons[i] : "";
                                 missedList.push({
                                     dateObj: recordDate,
                                     dateString: dateStr,
-                                    id: i,
                                     subject: subject,
                                     time: getMergedTime(i, i + span - 1),
-                                    type: 'regular',
-                                    reason: reason
+                                    type: 'regular'
                                 });
                             }
                         }
@@ -858,16 +855,12 @@
                 if (dayRecord.extra) {
                     dayRecord.extra.forEach(ext => {
                         if (ext.status === 'missed') {
-                            const extId = 'ext-' + ext.id;
-                            const reason = (dayRecord.reasons && dayRecord.reasons[extId]) ? dayRecord.reasons[extId] : "";
                             missedList.push({
                                 dateObj: recordDate,
                                 dateString: dateStr,
-                                id: extId,
                                 subject: ext.subject,
                                 time: ext.time,
-                                type: 'extra',
-                                reason: reason
+                                type: 'extra'
                             });
                         }
                     });
@@ -877,12 +870,9 @@
             return missedList;
         }
         
-        function saveMissedReason(dateStr, id, reason) {
+        function saveDailyMissedReason(dateStr, reason) {
             if (!appData.records[dateStr]) return;
-            if (!appData.records[dateStr].reasons) {
-                appData.records[dateStr].reasons = {};
-            }
-            appData.records[dateStr].reasons[id] = reason;
+            appData.records[dateStr].dayReason = reason;
             saveData();
             showToast("Reason saved", "success");
         }
@@ -1280,31 +1270,36 @@
                         html += groupHtml + '</div></div>';
                     }
                     currentDateStr = item.dateString;
+                    
+                    const dailyReason = (appData.records[item.dateString] && appData.records[item.dateString].dayReason) 
+                        ? appData.records[item.dateString].dayReason 
+                        : "";
+
                     groupHtml = `
                         <div class="bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
-                            <h3 class="text-lg font-bold text-slate-800 mb-4 pb-2 border-b border-slate-200">
-                                <i class="far fa-calendar-alt text-rose-500 mr-2"></i>${dateFormatted}
-                            </h3>
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pb-4 border-b border-slate-200 gap-3">
+                                <h3 class="text-lg font-bold text-slate-800 whitespace-nowrap">
+                                    <i class="far fa-calendar-alt text-rose-500 mr-2"></i>${dateFormatted}
+                                </h3>
+                                <div class="w-full md:w-1/2 lg:w-2/3">
+                                     <input type="text" placeholder="Reason for missing classes today..." value="${dailyReason.replace(/"/g, '&quot;')}" 
+                                        onchange="saveDailyMissedReason('${item.dateString}', this.value)"
+                                        class="w-full text-sm bg-white border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none transition-all placeholder:text-slate-400">
+                                </div>
+                            </div>
                             <div class="flex flex-col gap-3">
                     `;
                 }
 
                 const badge = item.type === 'extra' ? '<span class="text-[10px] ml-2 font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full border border-indigo-200 inline-block align-middle">Extra Class</span>' : '';
                 
-                // Add the class item into the current date group
+                // Add the class item into the current date group (Single vertical column)
                 groupHtml += `
-                    <div class="bg-white p-4 rounded-xl border border-rose-200 border-l-4 border-l-rose-500 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                        <div class="flex flex-col gap-1 w-full md:w-1/2">
-                            <span class="font-bold text-slate-800 text-sm md:text-base leading-tight">${item.subject} ${badge}</span>
-                            <div class="flex items-center gap-2 text-xs text-slate-500 font-medium mt-1">
-                                <i class="far fa-clock text-rose-400"></i> 
-                                <span>${item.time}</span>
-                            </div>
-                        </div>
-                        <div class="w-full md:w-1/2">
-                            <input type="text" placeholder="Reason for missing..." value="${item.reason.replace(/"/g, '&quot;')}" 
-                                onchange="saveMissedReason('${item.dateString}', '${item.id}', this.value)"
-                                class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none transition-all placeholder:text-slate-400">
+                    <div class="bg-white p-4 rounded-xl border border-rose-200 border-l-4 border-l-rose-500 flex flex-col gap-1 w-full">
+                        <span class="font-bold text-slate-800 text-sm md:text-base leading-tight">${item.subject} ${badge}</span>
+                        <div class="flex items-center gap-2 text-xs text-slate-500 font-medium mt-1">
+                            <i class="far fa-clock text-rose-400"></i> 
+                            <span>${item.time}</span>
                         </div>
                     </div>
                 `;
