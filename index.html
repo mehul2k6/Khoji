@@ -252,7 +252,7 @@
                     </div>
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-800">Missed Classes History</h2>
-                        <p class="text-sm text-slate-500 font-medium">A timeline of classes you have missed.</p>
+                        <p class="text-sm text-slate-500 font-medium">A timeline of classes you have missed, sorted by day.</p>
                     </div>
                 </div>
             </div>
@@ -837,11 +837,15 @@
 
                         if (!replacedSlots.has(i)) {
                             if (dayRecord.slots[i] === 'missed') {
+                                const reason = (dayRecord.reasons && dayRecord.reasons[i]) ? dayRecord.reasons[i] : "";
                                 missedList.push({
                                     dateObj: recordDate,
+                                    dateString: dateStr,
+                                    id: i,
                                     subject: subject,
                                     time: getMergedTime(i, i + span - 1),
-                                    type: 'regular'
+                                    type: 'regular',
+                                    reason: reason
                                 });
                             }
                         }
@@ -854,11 +858,16 @@
                 if (dayRecord.extra) {
                     dayRecord.extra.forEach(ext => {
                         if (ext.status === 'missed') {
+                            const extId = 'ext-' + ext.id;
+                            const reason = (dayRecord.reasons && dayRecord.reasons[extId]) ? dayRecord.reasons[extId] : "";
                             missedList.push({
                                 dateObj: recordDate,
+                                dateString: dateStr,
+                                id: extId,
                                 subject: ext.subject,
                                 time: ext.time,
-                                type: 'extra'
+                                type: 'extra',
+                                reason: reason
                             });
                         }
                     });
@@ -866,6 +875,16 @@
             }
             missedList.sort((a, b) => b.dateObj - a.dateObj);
             return missedList;
+        }
+        
+        function saveMissedReason(dateStr, id, reason) {
+            if (!appData.records[dateStr]) return;
+            if (!appData.records[dateStr].reasons) {
+                appData.records[dateStr].reasons = {};
+            }
+            appData.records[dateStr].reasons[id] = reason;
+            saveData();
+            showToast("Reason saved", "success");
         }
 
         // --- TAB SWITCHING ---
@@ -1248,29 +1267,54 @@
                 return;
             }
 
-            let html = '<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">';
+            let html = '<div class="flex flex-col gap-6">';
+            let currentDateStr = "";
+            let groupHtml = "";
+
             missedList.forEach(item => {
-                const dateFormatted = item.dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                const dateFormatted = item.dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+                
+                // If it's a new date, close the previous group and start a new one
+                if (currentDateStr !== item.dateString) {
+                    if (groupHtml !== "") {
+                        html += groupHtml + '</div></div>';
+                    }
+                    currentDateStr = item.dateString;
+                    groupHtml = `
+                        <div class="bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4 pb-2 border-b border-slate-200">
+                                <i class="far fa-calendar-alt text-rose-500 mr-2"></i>${dateFormatted}
+                            </h3>
+                            <div class="flex flex-col gap-3">
+                    `;
+                }
+
                 const badge = item.type === 'extra' ? '<span class="text-[10px] ml-2 font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full border border-indigo-200 inline-block align-middle">Extra Class</span>' : '';
                 
-                html += `
-                    <div class="bg-white p-4 rounded-xl border border-rose-200 border-l-4 border-l-rose-500 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-2.5">
-                        <div class="flex justify-between items-start">
-                            <span class="font-bold text-slate-800 text-sm leading-tight">${item.subject} ${badge}</span>
-                        </div>
-                        <div class="flex flex-col gap-1 mt-auto">
-                            <div class="flex items-center gap-2 text-xs text-slate-500 font-medium bg-slate-50 p-1.5 rounded-md border border-slate-100">
-                                <i class="far fa-calendar-alt w-3.5 text-center text-rose-400"></i> 
-                                <span>${dateFormatted}</span>
-                            </div>
-                            <div class="flex items-center gap-2 text-xs text-slate-500 font-medium bg-slate-50 p-1.5 rounded-md border border-slate-100">
-                                <i class="far fa-clock w-3.5 text-center text-rose-400"></i> 
+                // Add the class item into the current date group
+                groupHtml += `
+                    <div class="bg-white p-4 rounded-xl border border-rose-200 border-l-4 border-l-rose-500 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                        <div class="flex flex-col gap-1 w-full md:w-1/2">
+                            <span class="font-bold text-slate-800 text-sm md:text-base leading-tight">${item.subject} ${badge}</span>
+                            <div class="flex items-center gap-2 text-xs text-slate-500 font-medium mt-1">
+                                <i class="far fa-clock text-rose-400"></i> 
                                 <span>${item.time}</span>
                             </div>
+                        </div>
+                        <div class="w-full md:w-1/2">
+                            <input type="text" placeholder="Reason for missing..." value="${item.reason.replace(/"/g, '&quot;')}" 
+                                onchange="saveMissedReason('${item.dateString}', '${item.id}', this.value)"
+                                class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none transition-all placeholder:text-slate-400">
                         </div>
                     </div>
                 `;
             });
+            
+            // Close the final group
+            if (groupHtml !== "") {
+                html += groupHtml + '</div></div>';
+            }
+            
             html += '</div>';
             container.innerHTML = html;
         }
