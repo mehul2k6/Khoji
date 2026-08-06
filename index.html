@@ -30,26 +30,29 @@
             }
         }
 
-        /* Button Selected States */
+        /* Upgraded Button Selected States for Segmented Controls */
         .btn-selected-attended {
-            background-color: #22c55e !important;
+            background-color: #10b981 !important; /* emerald-500 */
             color: white !important;
-            border-color: #22c55e !important;
-            box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            transform: scale(1.02);
+            z-index: 10;
         }
 
         .btn-selected-missed {
-            background-color: #ef4444 !important;
+            background-color: #f43f5e !important; /* rose-500 */
             color: white !important;
-            border-color: #ef4444 !important;
-            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+            transform: scale(1.02);
+            z-index: 10;
         }
 
         .btn-selected-cancelled {
-            background-color: #64748b !important;
+            background-color: #64748b !important; /* slate-500 */
             color: white !important;
-            border-color: #64748b !important;
-            box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.3);
+            box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+            transform: scale(1.02);
+            z-index: 10;
         }
 
         /* Custom scrollbar for horizontal tables */
@@ -90,40 +93,32 @@
 
             <div class="z-10 relative flex flex-col items-center md:items-start w-full md:w-auto">
                 <div class="flex items-center gap-3">
-                    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Attendance Tracker</h1>
+                    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Hajri-75</h1>
                 </div>
-                <div class="flex items-center gap-2 mt-2 w-full justify-center md:justify-start">
-                    <i class="fas fa-graduation-cap text-blue-200"></i>
-                    <input type="text" id="batch-name-input" onchange="updateBatchName(this.value)"
-                        placeholder="Enter Batch / Section Name"
-                        class="bg-transparent border-b border-dashed border-blue-300 text-blue-100 font-medium focus:outline-none focus:border-white px-1 py-0.5 text-center md:text-left w-full max-w-[250px] placeholder-blue-300 transition-colors">
-                </div>
+                <p class="text-blue-200 text-sm font-medium mt-1">Student Attendance Portal</p>
             </div>
 
             <div class="flex flex-col sm:flex-row items-center gap-4 z-10 w-full md:w-auto justify-center">
-                <div
-                    class="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 shadow-inner w-full sm:w-auto justify-center">
-                    <div class="text-center border-r border-white/20 pr-4">
-                        <p class="text-xs text-blue-100 font-semibold uppercase tracking-wider mb-1">Held</p>
-                        <p id="total-held" class="text-2xl font-bold">0</p>
+                
+                <!-- Student Info Inputs (Replaced Stats) -->
+                <div class="flex flex-col sm:flex-row items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 shadow-inner w-full sm:w-auto justify-center">
+                    <div class="flex flex-col items-start border-b sm:border-b-0 sm:border-r border-white/20 pb-2 sm:pb-0 sm:pr-4 w-full sm:w-auto">
+                        <label class="text-[10px] text-blue-200 font-semibold uppercase tracking-wider mb-1">Name</label>
+                        <input type="text" id="student-name" onchange="updateStudentInfo('name', this.value)" placeholder="Enter Name" class="bg-transparent text-white font-bold text-sm focus:outline-none placeholder-blue-300/70 w-full sm:w-28 border-b border-transparent focus:border-white transition-colors">
                     </div>
-                    <div class="text-center border-r border-white/20 pr-4">
-                        <p class="text-xs text-blue-100 font-semibold uppercase tracking-wider mb-1">Attended</p>
-                        <p id="total-attended" class="text-2xl font-bold">0</p>
+                    <div class="flex flex-col items-start border-b sm:border-b-0 sm:border-r border-white/20 pb-2 sm:pb-0 sm:pr-4 w-full sm:w-auto">
+                        <label class="text-[10px] text-blue-200 font-semibold uppercase tracking-wider mb-1">Section</label>
+                        <input type="text" id="student-section" onchange="updateStudentInfo('section', this.value)" placeholder="Enter Section" class="bg-transparent text-white font-bold text-sm focus:outline-none placeholder-blue-300/70 w-full sm:w-28 border-b border-transparent focus:border-white transition-colors">
                     </div>
-                    <div class="text-center pl-2 flex flex-col justify-center items-center">
-                        <p class="text-xs text-blue-100 font-semibold uppercase tracking-wider mb-1">Overall</p>
-                        <p id="overall-percentage"
-                            class="text-3xl font-extrabold text-green-400 drop-shadow-sm leading-none mb-1">0%</p>
-                        <p id="overall-status"
-                            class="text-[10px] text-indigo-900 font-bold bg-white px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm mt-1 border border-indigo-200">
-                            Calculating...</p>
+                    <div class="flex flex-col items-start w-full sm:w-auto">
+                        <label class="text-[10px] text-blue-200 font-semibold uppercase tracking-wider mb-1">Semester</label>
+                        <input type="text" id="student-semester" onchange="updateStudentInfo('semester', this.value)" placeholder="Enter Sem" class="bg-transparent text-white font-bold text-sm focus:outline-none placeholder-blue-300/70 w-full sm:w-28 border-b border-transparent focus:border-white transition-colors">
                     </div>
                 </div>
 
                 <!-- Supabase Auth Profile Widget -->
                 <div
-                    class="flex flex-col items-center sm:items-end gap-1.5 bg-white/10 backdrop-blur-md p-3 px-4 rounded-xl border border-white/20 w-full sm:w-auto">
+                    class="flex flex-col items-center sm:items-end gap-1.5 bg-white/10 backdrop-blur-md p-3 px-4 rounded-xl border border-white/20 w-full sm:w-auto h-full justify-center">
                     <div class="flex items-center gap-2">
                         <div id="user-avatar"
                             class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold text-white">
@@ -147,6 +142,10 @@
                     class="px-6 md:px-8 py-2.5 bg-white text-blue-700 font-bold rounded-lg shadow-sm transition-all duration-300">
                     <i class="fas fa-calendar-day mr-2"></i>Daily Log
                 </button>
+                <button onclick="switchTab('subjects')" id="tab-subjects"
+                    class="px-6 md:px-8 py-2.5 text-slate-500 font-medium hover:text-slate-700 rounded-lg transition-all duration-300">
+                    <i class="fas fa-chart-pie mr-2"></i>Subject Overview
+                </button>
                 <button onclick="switchTab('missed')" id="tab-missed"
                     class="px-6 md:px-8 py-2.5 text-slate-500 font-medium hover:text-slate-700 rounded-lg transition-all duration-300">
                     <i class="fas fa-history mr-2"></i>Missed Classes
@@ -158,88 +157,80 @@
             </div>
         </div>
 
-        <!-- ================= DASHBOARD TAB ================= -->
-        <div id="section-dashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-8 block fade-in">
+        <!-- ================= DASHBOARD TAB (Upgraded Ergonomics) ================= -->
+        <div id="section-dashboard" class="max-w-4xl mx-auto block fade-in space-y-6 w-full">
+            
+            <!-- Date Navigator -->
+            <div class="flex items-center justify-between bg-white px-3 py-3 rounded-2xl border border-slate-200 shadow-sm ring-1 ring-slate-900/5">
+                <button id="btn-prev-date" onclick="changeDate(-1)"
+                    class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fas fa-chevron-left text-lg"></i>
+                </button>
+                <div class="text-center cursor-default flex flex-col items-center">
+                    <span id="display-date" class="font-black text-slate-800 text-lg md:text-xl tracking-tight"></span>
+                    <span id="display-day" class="text-[10px] md:text-xs text-blue-600 font-black tracking-widest uppercase bg-blue-50 px-2.5 py-0.5 rounded-full mt-1"></span>
+                </div>
+                <button id="btn-next-date" onclick="changeDate(1)"
+                    class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-colors active:scale-95">
+                    <i class="fas fa-chevron-right text-lg"></i>
+                </button>
+            </div>
 
-            <!-- Left Column: Daily Action -->
-            <div class="lg:col-span-5 space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-
-                    <!-- Date Navigator -->
-                    <div
-                        class="flex items-center justify-between bg-slate-50 p-3 rounded-xl mb-6 border border-slate-200">
-                        <button id="btn-prev-date" onclick="changeDate(-1)"
-                            class="w-10 h-10 flex items-center justify-center bg-white text-slate-600 rounded-lg shadow-sm hover:bg-slate-100 transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <div class="text-center cursor-default">
-                            <span id="display-date" class="font-bold text-slate-800 block text-base"></span>
-                            <span id="display-day"
-                                class="text-xs text-blue-600 font-bold tracking-wider uppercase"></span>
-                        </div>
-                        <button id="btn-next-date" onclick="changeDate(1)"
-                            class="w-10 h-10 flex items-center justify-center bg-white text-slate-600 rounded-lg shadow-sm hover:bg-slate-100 transition active:scale-95">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-
-                    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-5 gap-3">
-                        <div class="flex items-center gap-2">
-                            <h2 class="text-xl font-extrabold text-slate-800">Daily Classes</h2>
-                            <span id="holiday-badge"
-                                class="hidden bg-emerald-100 text-emerald-700 text-xs font-black px-2.5 py-1 rounded-md tracking-wider">OFF</span>
-                        </div>
-                        <div id="day-action-buttons" class="flex flex-wrap gap-2 w-full xl:w-auto">
-                            <!-- Buttons injected via JS -->
-                        </div>
-                    </div>
-
-                    <div id="daily-classes-list" class="space-y-4">
-                        <!-- Classes injected via JS -->
-                    </div>
-
-                    <div id="no-classes-msg" class="hidden flex flex-col items-center justify-center py-10 text-center">
-                        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3">
-                            <i class="fas fa-mug-hot text-2xl text-slate-400"></i>
-                        </div>
-                        <h3 class="text-slate-700 font-bold">Nothing scheduled here</h3>
-                        <p id="no-classes-submsg" class="text-slate-500 text-sm mt-1">Enjoy your time off.</p>
-                    </div>
+            <!-- Action Headers -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm"><i class="fas fa-calendar-day text-lg"></i></div>
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Daily Log</h2>
+                    <span id="holiday-badge"
+                        class="hidden bg-emerald-100 text-emerald-700 text-xs font-black px-2.5 py-1 rounded-md tracking-wider shadow-sm">OFF</span>
+                </div>
+                <div id="day-action-buttons" class="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <!-- Buttons injected via JS -->
                 </div>
             </div>
 
-            <!-- Right Column: Subject Stats -->
-            <div class="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-fit">
-                <div
-                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                            <i class="fas fa-chart-pie"></i>
-                        </div>
-                        <h2 class="text-xl font-extrabold text-slate-800">Subject Overview</h2>
-                    </div>
+            <div id="daily-classes-list" class="space-y-4">
+                <!-- Classes injected via JS -->
+            </div>
 
-                    <!-- Target Criteria Selector -->
-                    <div
-                        class="flex items-center gap-2 text-sm bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
-                        <label for="target-criteria" class="font-bold text-slate-600"><i
-                                class="fas fa-bullseye text-indigo-400 mr-1"></i> Target:</label>
-                        <select id="target-criteria" onchange="updateCriteria(this.value)"
-                            class="bg-transparent font-extrabold text-indigo-600 outline-none cursor-pointer">
-                            <option value="60">60%</option>
-                            <option value="65">65%</option>
-                            <option value="70">70%</option>
-                            <option value="75">75%</option>
-                            <option value="80">80%</option>
-                            <option value="85">85%</option>
-                        </select>
+            <div id="no-classes-msg" class="hidden flex flex-col items-center justify-center py-12 text-center bg-white rounded-2xl border border-slate-200 border-dashed">
+                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                    <i class="fas fa-mug-hot text-2xl text-slate-400"></i>
+                </div>
+                <h3 class="text-slate-700 font-bold text-lg">Nothing scheduled here</h3>
+                <p id="no-classes-submsg" class="text-slate-500 text-sm mt-1">Enjoy your time off.</p>
+            </div>
+        </div>
+
+        <!-- ================= SUBJECT OVERVIEW TAB ================= -->
+        <div id="section-subjects" class="max-w-5xl mx-auto bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 hidden fade-in w-full">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                        <i class="fas fa-chart-pie"></i>
                     </div>
+                    <h2 class="text-xl font-extrabold text-slate-800">Subject-wise Breakdown</h2>
                 </div>
 
-                <div id="subject-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Subjects injected via JS -->
+                <!-- Target Criteria Selector -->
+                <div class="flex items-center gap-2 text-sm bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+                    <label for="target-criteria" class="font-bold text-slate-600"><i
+                            class="fas fa-bullseye text-indigo-400 mr-1"></i> Target:</label>
+                    <select id="target-criteria" onchange="updateCriteria(this.value)"
+                        class="bg-transparent font-extrabold text-indigo-600 outline-none cursor-pointer">
+                        <option value="60">60%</option>
+                        <option value="65">65%</option>
+                        <option value="70">70%</option>
+                        <option value="75">75%</option>
+                        <option value="80">80%</option>
+                        <option value="85">85%</option>
+                    </select>
                 </div>
+            </div>
+
+            <div id="subject-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                <!-- Subjects injected via JS -->
             </div>
         </div>
 
@@ -436,7 +427,9 @@
         if (currentDate < START_DATE) currentDate = new Date(START_DATE);
 
         let defaultData = {
-            batchName: "Mech - Section 1 (M1B2)",
+            studentName: "",
+            studentSection: "Mech - Section 1 (M1B2)",
+            studentSemester: "",
             targetCriteria: 75,
             slotTimings: [
                 "9:00 - 10:00 AM",
@@ -656,7 +649,6 @@
         }
 
         async function loadDataFromCloud() {
-            document.getElementById('overall-percentage').innerText = "...";
             if (supabaseClient && currentUser) {
                 try {
                     const { data, error } = await supabaseClient
@@ -676,7 +668,10 @@
                 if (localBackup) appData = localBackup;
             }
 
-            if (!appData.batchName) appData.batchName = "Enter Batch Name";
+            // Fallback for new properties
+            if (appData.studentName === undefined) appData.studentName = "";
+            if (appData.studentSection === undefined) appData.studentSection = appData.batchName || "";
+            if (appData.studentSemester === undefined) appData.studentSemester = "";
             if (!appData.targetCriteria) appData.targetCriteria = 75;
 
             document.getElementById('target-criteria').value = appData.targetCriteria;
@@ -721,8 +716,10 @@
             return Array.from(subjects).sort();
         }
 
-        function updateBatchName(val) {
-            appData.batchName = val;
+        function updateStudentInfo(field, val) {
+            if (field === 'name') appData.studentName = val;
+            if (field === 'section') appData.studentSection = val;
+            if (field === 'semester') appData.studentSemester = val;
             saveData();
         }
 
@@ -880,7 +877,10 @@
         // --- TAB SWITCHING ---
         function switchTab(tabName) {
             document.getElementById('section-dashboard').classList.toggle('hidden', tabName !== 'dashboard');
-            document.getElementById('section-dashboard').classList.toggle('grid', tabName === 'dashboard');
+            document.getElementById('section-dashboard').classList.toggle('block', tabName === 'dashboard');
+            
+            document.getElementById('section-subjects').classList.toggle('hidden', tabName !== 'subjects');
+            document.getElementById('section-subjects').classList.toggle('block', tabName === 'subjects');
             
             document.getElementById('section-missed').classList.toggle('hidden', tabName !== 'missed');
             document.getElementById('section-missed').classList.toggle('block', tabName === 'missed');
@@ -892,60 +892,23 @@
             const inactiveClass = "px-6 md:px-8 py-2.5 text-slate-500 font-medium hover:text-slate-700 rounded-lg transition-all duration-300";
 
             document.getElementById('tab-dashboard').className = tabName === 'dashboard' ? activeClass : inactiveClass;
+            document.getElementById('tab-subjects').className = tabName === 'subjects' ? activeClass : inactiveClass;
             document.getElementById('tab-missed').className = tabName === 'missed' ? activeClass : inactiveClass;
             document.getElementById('tab-timetable').className = tabName === 'timetable' ? activeClass : inactiveClass;
         }
 
         // --- RENDERING FUNCTIONS ---
         function renderAll() {
-            document.getElementById('batch-name-input').value = appData.batchName;
+            document.getElementById('student-name').value = appData.studentName || "";
+            document.getElementById('student-section').value = appData.studentSection || "";
+            document.getElementById('student-semester').value = appData.studentSemester || "";
+            
             const stats = calculateStats();
-            renderHeader(stats);
             renderDateUI();
             renderDailyClasses();
             renderSubjectStats(stats);
             renderTimetableGrid();
             renderMissedClasses();
-        }
-
-        function renderHeader(stats) {
-            let totalHeld = 0;
-            let totalAtt = 0;
-            for (const data of Object.values(stats)) {
-                totalHeld += data.held;
-                totalAtt += data.attended;
-            }
-            const overallPct = calcPercent(totalAtt, totalHeld);
-            const target = appData.targetCriteria ? (appData.targetCriteria / 100) : 0.75;
-
-            document.getElementById('total-held').innerText = totalHeld;
-            document.getElementById('total-attended').innerText = totalAtt;
-
-            const pctElement = document.getElementById('overall-percentage');
-            pctElement.innerText = `${overallPct.toFixed(1)}%`;
-            pctElement.className = `text-3xl font-extrabold drop-shadow-sm leading-none mb-1 ${getColorClass(overallPct, target)}`;
-
-            let statusText = "";
-            let statusBadgeElement = document.getElementById('overall-status');
-
-            if (totalHeld === 0) {
-                statusText = "Add classes to track status";
-                statusBadgeElement.className = "text-[10px] text-slate-600 font-bold bg-slate-100 px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-sm mt-1 border border-slate-200";
-            } else {
-                let safeToMiss = Math.floor(totalAtt / target) - totalHeld;
-                if (safeToMiss > 0) {
-                    statusText = `Safe to miss ${safeToMiss} classes`;
-                    statusBadgeElement.className = "text-[10px] text-emerald-800 font-bold bg-emerald-100 px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-sm mt-1 border border-emerald-200";
-                } else if (safeToMiss === 0 && (totalAtt / totalHeld) >= target) {
-                    statusText = `On track (Don't miss next)`;
-                    statusBadgeElement.className = "text-[10px] text-amber-800 font-bold bg-amber-100 px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-sm mt-1 border border-amber-200";
-                } else {
-                    let needToAttend = Math.ceil((target * totalHeld - totalAtt) / (1 - target));
-                    statusText = `Attend ${needToAttend} more to reach ${appData.targetCriteria}%`;
-                    statusBadgeElement.className = "text-[10px] text-rose-800 font-bold bg-rose-100 px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-sm mt-1 border border-rose-200";
-                }
-            }
-            statusBadgeElement.innerText = statusText;
         }
 
         function renderDateUI() {
@@ -974,33 +937,33 @@
 
             if (isWeeklyHoliday) {
                 actionBtns.innerHTML = `
-                    <button onclick="openExtraClassModal()" class="w-full xl:w-auto flex-1 justify-center flex items-center text-xs font-bold py-2 px-4 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition shadow-sm active:scale-95">
+                    <button onclick="openExtraClassModal()" class="w-full sm:w-auto flex-1 sm:flex-none justify-center flex items-center text-sm font-bold py-2 px-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition shadow-sm active:scale-95">
                         <i class="fas fa-plus mr-1.5"></i> Extra Class
                     </button>
                 `;
             } else {
                 if (isSpecialHoliday) {
                     actionBtns.innerHTML = `
-                        <button onclick="toggleDateHoliday()" class="w-full xl:w-auto flex-1 justify-center flex items-center text-xs font-bold py-2 px-4 rounded-lg border bg-slate-100 text-slate-700 hover:bg-slate-200 transition shadow-sm active:scale-95">
+                        <button onclick="toggleDateHoliday()" class="w-full sm:w-auto flex-1 sm:flex-none justify-center flex items-center text-sm font-bold py-2 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition shadow-sm active:scale-95">
                             <i class="fas fa-undo mr-1.5"></i> Undo Holiday
                         </button>
-                        <button onclick="openExtraClassModal()" class="w-full xl:w-auto flex-1 justify-center flex items-center text-xs font-bold py-2 px-4 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition shadow-sm active:scale-95">
+                        <button onclick="openExtraClassModal()" class="w-full sm:w-auto flex-1 sm:flex-none justify-center flex items-center text-sm font-bold py-2 px-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition shadow-sm active:scale-95">
                             <i class="fas fa-plus mr-1.5"></i> Extra Class
                         </button>
                     `;
                 } else {
                     actionBtns.innerHTML = `
-                        <button onclick="markWorkingDay()" class="flex-1 justify-center flex items-center text-xs font-bold py-2 px-3 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition shadow-sm active:scale-95" title="Mark all classes today as attended">
-                            <i class="fas fa-briefcase mr-1.5"></i> Set Active
+                        <button onclick="markWorkingDay()" class="flex-1 sm:flex-none justify-center flex items-center text-sm font-bold py-2 px-3.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition shadow-sm active:scale-95" title="Mark all classes today as attended">
+                            <i class="fas fa-briefcase mr-1.5"></i> Active Day
                         </button>
-                        <button onclick="toggleDateHoliday()" class="flex-1 justify-center flex items-center text-xs font-bold py-2 px-3 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition shadow-sm active:scale-95" title="Mark today as a holiday">
+                        <button onclick="toggleDateHoliday()" class="flex-1 sm:flex-none justify-center flex items-center text-sm font-bold py-2 px-3.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition shadow-sm active:scale-95" title="Mark today as a holiday">
                             <i class="fas fa-umbrella-beach mr-1.5"></i> Holiday
                         </button>
-                        <button onclick="openExtraClassModal()" class="flex-1 justify-center flex items-center text-xs font-bold py-2 px-3 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition shadow-sm active:scale-95">
-                            <i class="fas fa-plus mr-1.5"></i> Extra Class
+                        <button onclick="openExtraClassModal()" class="flex-1 sm:flex-none justify-center flex items-center text-sm font-bold py-2 px-3.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition shadow-sm active:scale-95">
+                            <i class="fas fa-plus mr-1.5"></i> Extra
                         </button>
                         ${dateRecord && ((Object.keys(dateRecord.slots).length > 0) || (dateRecord.extra && dateRecord.extra.length > 0)) ? `
-                        <button onclick="clearDay()" class="flex-1 justify-center flex items-center text-xs font-bold py-2 px-3 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition shadow-sm active:scale-95" title="Clear all records for this day">
+                        <button onclick="clearDay()" class="flex-1 sm:flex-none justify-center flex items-center text-sm font-bold py-2 px-3.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition shadow-sm active:scale-95" title="Clear all records for this day">
                             <i class="fas fa-eraser mr-1.5"></i> Clear
                         </button>` : ''}
                     `;
@@ -1050,32 +1013,39 @@
                             selectedStatus = dateRecord.slots[mergedIndices[0]];
                         }
 
-                        const btnAtt = selectedStatus === 'attended' ? 'btn-selected-attended' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200 hover:shadow-sm';
-                        const btnMis = selectedStatus === 'missed' ? 'btn-selected-missed' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200 hover:shadow-sm';
-                        const btnCan = selectedStatus === 'cancelled' ? 'btn-selected-cancelled' : 'bg-slate-50 text-slate-600 hover:bg-slate-200 border-slate-300 hover:shadow-sm';
+                        // Updated segmented control UI strings
+                        const baseBtn = "flex-1 md:w-28 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 border border-transparent";
+                        const btnAtt = selectedStatus === 'attended' ? `${baseBtn} btn-selected-attended` : `${baseBtn} text-slate-500 hover:bg-emerald-50 hover:text-emerald-600`;
+                        const btnMis = selectedStatus === 'missed' ? `${baseBtn} btn-selected-missed` : `${baseBtn} text-slate-500 hover:bg-rose-50 hover:text-rose-600`;
+                        const btnCan = selectedStatus === 'cancelled' ? `${baseBtn} btn-selected-cancelled` : `${baseBtn} text-slate-500 hover:bg-slate-200 hover:text-slate-700`;
 
+                        const accentColor = selectedStatus === 'attended' ? 'bg-emerald-500' : selectedStatus === 'missed' ? 'bg-rose-500' : selectedStatus === 'cancelled' ? 'bg-slate-500' : 'bg-blue-500';
+                        const badgeHTML = mergedIndices.length > 1 ? '<span class="text-[10px] font-black text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md ml-2 align-middle border border-blue-200 tracking-wide uppercase">2 Hr Lab</span>' : '';
                         const arrayStr = `[${mergedIndices.join(',')}]`;
 
                         listDiv.innerHTML += `
-                            <div class="group flex flex-col bg-white p-4 rounded-xl border border-slate-200 border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 gap-3">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex flex-col w-full">
-                                        <span class="font-bold text-slate-800 text-sm md:text-base break-words">${subjectName} ${mergedIndices.length > 1 ? '<span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ml-2 align-middle border border-blue-200">2 Hr Lab</span>' : ''}</span>
-                                        <div class="flex items-center gap-1.5 mt-1">
-                                            <i class="far fa-clock text-slate-400 text-xs"></i>
-                                            <span class="text-xs font-semibold text-slate-500">${timeSlot}</span>
+                            <div class="group flex flex-col md:flex-row md:items-center bg-white p-5 rounded-2xl border border-slate-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-lg transition-all duration-300 gap-4 relative overflow-hidden">
+                                <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-colors duration-300 ${accentColor}"></div>
+                                
+                                <div class="flex flex-col flex-1 pl-2">
+                                    <span class="font-extrabold text-slate-800 text-base md:text-lg tracking-tight">${subjectName} ${badgeHTML}</span>
+                                    <div class="flex items-center gap-2 mt-1.5">
+                                        <div class="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-400">
+                                            <i class="far fa-clock text-xs"></i>
                                         </div>
+                                        <span class="text-sm font-semibold text-slate-500">${timeSlot}</span>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-3 gap-2 w-full pt-1 border-t border-slate-100">
-                                    <button onclick="markClass(${arrayStr}, 'attended')" class="${btnAtt} py-2 rounded-lg text-sm font-bold transition-all duration-200 border active:scale-95 flex items-center justify-center gap-1.5">
-                                        <i class="fas fa-check"></i> <span class="hidden sm:inline">Attended</span>
+
+                                <div class="flex bg-slate-100/70 p-1.5 rounded-xl border border-slate-100 w-full md:w-auto gap-1">
+                                    <button onclick="markClass(${arrayStr}, 'attended')" class="${btnAtt}">
+                                        <i class="fas fa-check"></i> <span>Attended</span>
                                     </button>
-                                    <button onclick="markClass(${arrayStr}, 'missed')" class="${btnMis} py-2 rounded-lg text-sm font-bold transition-all duration-200 border active:scale-95 flex items-center justify-center gap-1.5">
-                                        <i class="fas fa-times"></i> <span class="hidden sm:inline">Missed</span>
+                                    <button onclick="markClass(${arrayStr}, 'missed')" class="${btnMis}">
+                                        <i class="fas fa-times"></i> <span>Missed</span>
                                     </button>
-                                    <button onclick="markClass(${arrayStr}, 'cancelled')" class="${btnCan} py-2 rounded-lg text-sm font-bold transition-all duration-200 border active:scale-95 flex items-center justify-center gap-1.5">
-                                        <i class="fas fa-minus"></i> <span class="hidden sm:inline">Cancelled</span>
+                                    <button onclick="markClass(${arrayStr}, 'cancelled')" class="${btnCan}">
+                                        <i class="fas fa-minus"></i> <span>Cancelled</span>
                                     </button>
                                 </div>
                             </div>
@@ -1100,38 +1070,44 @@
 
         function renderExtraClassesOnly(extraClasses, listDiv) {
             extraClasses.forEach(ext => {
-                const btnAtt = ext.status === 'attended' ? 'btn-selected-attended' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200 hover:shadow-sm';
-                const btnMis = ext.status === 'missed' ? 'btn-selected-missed' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200 hover:shadow-sm';
-                const btnCan = ext.status === 'cancelled' ? 'btn-selected-cancelled' : 'bg-slate-50 text-slate-600 hover:bg-slate-200 border-slate-300 hover:shadow-sm';
+                const baseBtn = "flex-1 md:w-28 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 border border-transparent";
+                const btnAtt = ext.status === 'attended' ? `${baseBtn} btn-selected-attended` : `${baseBtn} text-slate-500 hover:bg-emerald-50 hover:text-emerald-600`;
+                const btnMis = ext.status === 'missed' ? `${baseBtn} btn-selected-missed` : `${baseBtn} text-slate-500 hover:bg-rose-50 hover:text-rose-600`;
+                const btnCan = ext.status === 'cancelled' ? `${baseBtn} btn-selected-cancelled` : `${baseBtn} text-slate-500 hover:bg-slate-200 hover:text-slate-700`;
 
-                let badgeHTML = '<span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full ml-2 align-middle border border-indigo-200">Extra Class</span>';
+                const accentColor = ext.status === 'attended' ? 'bg-emerald-500' : ext.status === 'missed' ? 'bg-rose-500' : ext.status === 'cancelled' ? 'bg-slate-500' : 'bg-indigo-500';
+                
+                let badgeHTML = '<span class="text-[10px] font-black text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md ml-2 align-middle border border-indigo-200 tracking-wide uppercase">Extra Class</span>';
                 if (ext.replacedSlot !== null) {
-                    badgeHTML = '<span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ml-2 align-middle border border-amber-200">Exchanged</span>';
+                    badgeHTML = '<span class="text-[10px] font-black text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md ml-2 align-middle border border-amber-200 tracking-wide uppercase">Exchanged</span>';
                 }
 
                 listDiv.innerHTML += `
-                    <div class="group flex flex-col bg-white p-4 rounded-xl border border-slate-200 border-l-4 border-l-indigo-500 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 gap-3">
-                        <div class="flex items-start justify-between">
-                            <div class="flex flex-col w-full">
-                                <span class="font-bold text-slate-800 text-sm md:text-base break-words">${ext.subject} ${badgeHTML}</span>
-                                <div class="flex items-center justify-between w-full mt-1">
-                                    <div class="flex items-center gap-1.5">
-                                        <i class="far fa-clock text-slate-400 text-xs"></i>
-                                        <span class="text-xs font-semibold text-slate-500">${ext.time}</span>
-                                    </div>
-                                    <button onclick="deleteExtraClass(${ext.id})" class="text-slate-400 hover:text-rose-500 transition-colors" title="Delete extra class"><i class="fas fa-trash"></i></button>
+                    <div class="group flex flex-col md:flex-row md:items-center bg-white p-5 rounded-2xl border border-slate-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-lg transition-all duration-300 gap-4 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-colors duration-300 ${accentColor}"></div>
+                        
+                        <div class="flex flex-col flex-1 pl-2">
+                            <div class="flex justify-between items-start">
+                                <span class="font-extrabold text-slate-800 text-base md:text-lg tracking-tight">${ext.subject} ${badgeHTML}</span>
+                                <button onclick="deleteExtraClass(${ext.id})" class="text-slate-300 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-xl transition-colors" title="Delete extra class"><i class="fas fa-trash"></i></button>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1.5">
+                                <div class="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-400">
+                                    <i class="far fa-clock text-xs"></i>
                                 </div>
+                                <span class="text-sm font-semibold text-slate-500">${ext.time}</span>
                             </div>
                         </div>
-                        <div class="grid grid-cols-3 gap-2 w-full pt-1 border-t border-slate-100">
-                            <button onclick="markExtraClass(${ext.id}, 'attended')" class="${btnAtt} py-2 rounded-lg text-sm font-bold transition-all duration-200 border active:scale-95 flex items-center justify-center gap-1.5">
-                                <i class="fas fa-check"></i> <span class="hidden sm:inline">Attended</span>
+
+                        <div class="flex bg-slate-100/70 p-1.5 rounded-xl border border-slate-100 w-full md:w-auto gap-1">
+                            <button onclick="markExtraClass(${ext.id}, 'attended')" class="${btnAtt}">
+                                <i class="fas fa-check"></i> <span>Attended</span>
                             </button>
-                            <button onclick="markExtraClass(${ext.id}, 'missed')" class="${btnMis} py-2 rounded-lg text-sm font-bold transition-all duration-200 border active:scale-95 flex items-center justify-center gap-1.5">
-                                <i class="fas fa-times"></i> <span class="hidden sm:inline">Missed</span>
+                            <button onclick="markExtraClass(${ext.id}, 'missed')" class="${btnMis}">
+                                <i class="fas fa-times"></i> <span>Missed</span>
                             </button>
-                            <button onclick="markExtraClass(${ext.id}, 'cancelled')" class="${btnCan} py-2 rounded-lg text-sm font-bold transition-all duration-200 border active:scale-95 flex items-center justify-center gap-1.5">
-                                <i class="fas fa-minus"></i> <span class="hidden sm:inline">Cancelled</span>
+                            <button onclick="markExtraClass(${ext.id}, 'cancelled')" class="${btnCan}">
+                                <i class="fas fa-minus"></i> <span>Cancelled</span>
                             </button>
                         </div>
                     </div>
